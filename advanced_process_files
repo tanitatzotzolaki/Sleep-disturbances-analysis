@@ -1,0 +1,28 @@
+# Create a folder named 'Output_Files' inside the specified path if it doesn't exist
+mkdir -p "/d/Sleep/R1/Output_Files"
+
+# Output file path
+output_file="/d/Sleep/R1/Output_Files/all_tracks.txt"
+
+# Create the file
+> "$output_file"
+
+for letter in {A..F}; do
+    for number in {01..12}; do
+        filename="/d/Sleep/R1/Track-20230208_PD_sleep_R1-Trial     1-${letter}${number}-Subject 1.txt"
+        # Adjusted path format for Git Bash on Windows
+        tail -n +39 "${filename}" | \
+        tr -d '\000' | cut -f 2,8 -d ";" | \
+        awk  -v ID="${letter}${number}" 'BEGIN {FS=";"};{print $1,$2*82.8075,ID}' OFS="\t" >> "$output_file"
+    done
+done
+
+# Sort the output file by the last column in the specified order
+awk '{printf "%s\t%s\n", $3, $0}' "$output_file" | \
+    sort -t$'\t' -k1.1,1.2 -k1.3n | cut -f 2- > "${output_file}_sorted"
+
+# Remove the unsorted file
+rm "$output_file"
+
+# Rename the sorted file
+mv "${output_file}_sorted" "$output_file"
